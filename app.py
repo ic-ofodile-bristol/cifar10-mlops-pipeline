@@ -1,7 +1,7 @@
 
 from contextlib import asynccontextmanager
 import io
-
+import os
 import mlflow
 import mlflow.pytorch
 import torch
@@ -31,10 +31,23 @@ class PredictionResponse(BaseModel):
 async def lifespan(app: FastAPI):
 
     # STARTUP: Load champion model once
-    mlflow.set_tracking_uri("http://127.0.0.1:5001")
+   #mlflow.set_tracking_uri("http://127.0.0.1:5001")
+
+    model_uri = os.getenv(
+        "MODEL_URI",
+        "models:/cifar10_best_model@champion"
+    )
+
+    if model_uri.startswith("models:/"):
+        mlflow.set_tracking_uri(
+            os.getenv(
+                "MLFLOW_TRACKING_URI",
+                "http://127.0.0.1:5001"
+            )
+        )
 
     model = mlflow.pytorch.load_model(
-        "models:/cifar10_best_model@champion",
+        model_uri,
         map_location="cpu",
     )
 
