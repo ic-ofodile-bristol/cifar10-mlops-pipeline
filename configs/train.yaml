@@ -1,0 +1,13 @@
+seed: 42
+
+batch_size: 64
+
+epochs: 5
+
+learning_rate: 0.001
+
+data_dir: data/
+
+checkpoint_dir: artifacts/checkpoints/
+
+model_path: artifacts/model.pt

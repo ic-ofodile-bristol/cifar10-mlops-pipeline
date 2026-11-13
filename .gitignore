@@ -1,0 +1,25 @@
+# Python environment
+.venv/
+__pycache__/
+*.pyc
+
+# Datasets
+data/
+
+# Model checkpoints and artifacts
+artifacts/
+*.pt
+*.pth
+
+# MLflow
+mlruns/
+mlflow.db
+
+# Environment variables
+.env
+
+# Test cache
+.pytest_cache/
+
+# macOS
+.DS_Store
