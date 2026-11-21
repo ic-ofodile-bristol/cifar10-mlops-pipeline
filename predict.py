@@ -6,6 +6,8 @@ import mlflow.pytorch
 import torch
 from PIL import Image
 from torchvision import transforms
+from src.data import get_transform
+
 
 CIFAR10_CLASSES = [
     "airplane", "automobile", "bird", "cat", "deer",
@@ -24,7 +26,7 @@ def predict(image_path):
 
     transform = transforms.Compose([
         transforms.Resize((32, 32)),
-        transforms.ToTensor(),
+        get_transform(),
     ])
 
     image = Image.open(image_path).convert("RGB")

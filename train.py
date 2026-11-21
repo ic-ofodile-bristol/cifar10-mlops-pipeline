@@ -4,6 +4,8 @@ from pathlib import Path
 
 import torch
 
+import mlflow
+
 from src.config import load_config
 from src.data import get_dataloaders
 from src.model import CIFAR10Model
@@ -65,38 +67,62 @@ def main(config_path):
             "Resuming training from epoch %d",
             start_epoch + 1,
         )
+
+    mlflow.set_tracking_uri("http://127.0.0.1:5001")
+    mlflow.set_experiment("cifar10")
+
     # Training loop
-    for epoch in range(start_epoch, config["epochs"]):
-        train_loss, train_acc = train_one_epoch(
-            model, train_loader, optimizer, criterion, device
-        )
 
-        val_loss, val_acc = evaluate(
-            model, val_loader, criterion, device
-        )
+    with mlflow.start_run(run_name = "cifar10_training"):
+        mlflow.log_params({
+            "batch_size": config["batch_size"],
+            "learning_rate": config["learning_rate"],
+            "epochs": config["epochs"],
+            "seed": config["seed"],
+        })
 
-        print(
-            f"Epoch {epoch + 1}/{config['epochs']} | "
-            f"Train Loss: {train_loss:.4f} | "
-            f"Train Acc: {train_acc:.4f} | "
-            f"Val Loss: {val_loss:.4f} | "
-            f"Val Acc: {val_acc:.4f}"
-        )
+        # Main training loop
+        for epoch in range(start_epoch, config["epochs"]):
+            train_loss, train_acc = train_one_epoch(
+                model, train_loader, optimizer, criterion, device
+            )
 
-        # Save best model based on validation accuracy
-        if val_acc > best_val_accuracy:
-            best_val_accuracy = val_acc
-            torch.save(model.state_dict(), model_path)
-            print(f"Best model saved: {model_path}")
+            val_loss, val_acc = evaluate(
+                model, val_loader, criterion, device
+            )
 
-        save_checkpoint(checkpoint_path, model, optimizer, epoch, best_val_accuracy, config)
+            print(
+                f"Epoch {epoch + 1}/{config['epochs']} | "
+                f"Train Loss: {train_loss:.4f} | "
+                f"Train Acc: {train_acc:.4f} | "
+                f"Val Loss: {val_loss:.4f} | "
+                f"Val Acc: {val_acc:.4f}"
+            )
 
-        logger.info(
-            "Checkpoint saved after epoch %d",
-            epoch + 1,
-        )
+            mlflow.log_metrics(
+                {
+                    "train_loss": train_loss,
+                    "train_accuracy": train_acc,
+                    "val_loss": val_loss,
+                    "val_accuracy": val_acc,
+                },
+                step=epoch + 1,
+            )
+            # Save best model based on validation accuracy
+            if val_acc > best_val_accuracy:
+                best_val_accuracy = val_acc
+                torch.save(model.state_dict(), model_path)
+                print(f"Best model saved: {model_path}")
 
-    print(f"Training complete. Best validation accuracy: {best_val_accuracy:.4f}")
+            save_checkpoint(checkpoint_path, model, optimizer, epoch, best_val_accuracy, config)
+
+            logger.info(
+                "Checkpoint saved after epoch %d",
+                epoch + 1,
+            )
+
+        print(f"Training complete. Best validation accuracy: {best_val_accuracy:.4f}")
+        mlflow.log_artifact(config["model_path"], artifact_path="best_model")
 
 
 if __name__ == "__main__":

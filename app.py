@@ -9,7 +9,7 @@ from fastapi import FastAPI, UploadFile, HTTPException
 from PIL import Image
 from pydantic import BaseModel
 from torchvision import transforms
-
+from src.data import get_dataloaders, get_transform
 
 # Store the loaded model in memory
 ml_models = {}
@@ -107,7 +107,7 @@ async def predict(file: UploadFile):
             detail="Invalid image",
         )
 
-    tensor = transforms.ToTensor()(image).unsqueeze(0)
+    tensor = get_transform()(image).unsqueeze(0)
 
     # Model inference
     with torch.no_grad():

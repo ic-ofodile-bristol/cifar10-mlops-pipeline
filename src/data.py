@@ -2,15 +2,17 @@ import torch
 from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms
 
-
-def get_dataloaders(data_dir="data", batch_size=64, seed=42):
-    transform = transforms.Compose([
+def get_transform():
+    return transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(
             (0.4914, 0.4822, 0.4465),
-            (0.2470, 0.2435, 0.2616)
+            (0.2470, 0.2435, 0.2616),
         ),
     ])
+
+def get_dataloaders(data_dir="data", batch_size=64, seed=42):
+    transform = get_transform()
 
     train_dataset = datasets.CIFAR10(
         root=data_dir,
